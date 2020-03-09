@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<aiml version="2.0">
+
+  <!-- Pregunta 1: Háblame un poco de ti -->
+
+  <category>
+    <pattern>HABLAME UN POCO DE TI</pattern>
+    <template>Respuesta de la Pregunta 1.</template>
+  </category>
+
+  <category>
+    <pattern> ^ [hableme cuenteme contarme decirme] ^ usted ^ </pattern>
+    <template><srai>HABLAME UN POCO DE TI</srai></template>
+  </category>
+
+  <category>
+    <pattern> ^ [hablame cuentame contarme decirme] ^ ti ^ </pattern>
+    <template><srai>HABLAME UN POCO DE TI</srai></template>
+  </category>
+
+  <category>
+    <pattern> ^ [describete describase describir*] ^ </pattern>
+    <template><srai>HABLAME UN POCO DE TI</srai></template>
+  </category>
+
+  <!-- Pregunta 2: ¿Cuál es tu mayor defecto? -->
+
+  <category>
+    <pattern>CUAL ES [TU SU] MAYOR DEFECTO</pattern>
+    <template>Respuesta de la Pregunta 2.</template>
+  </category>
+
+  <category>
+    <pattern> ^ fall+ ^ </pattern>
+    <template><srai>CUAL ES TU MAYOR DEFECTO</srai></template>
+  </category>
+
+  <category>
+    <pattern>
+      ^ [que como] (debe+ tiene+ tendria+ puede+ podria+ haria+) ^ mejorar+ ^
+    </pattern>
+    <template><srai>CUAL ES TU MAYOR DEFECTO</srai></template>
+  </category>
+
+  <category>
+    <pattern> ^ hacer mejor ^ </pattern>
+    <template><srai>CUAL ES TU MAYOR DEFECTO</srai></template>
+  </category>
+
+  <category>
+    <pattern> ^ que (necesita+ tiene+ debe+ podria+) ^ cambiar+ ^ </pattern>
+    <template><srai>CUAL ES TU MAYOR DEFECTO</srai></template>
+  </category>
+
+  <!-- Pregunta 3: ¿Cuáles son tus 3 mayores virtudes? -->
+
+  <category>
+    <pattern>CUALES SON [TUS SUS] [3 TRES] MAYORES VIRTUDES</pattern>
+    <template>Respuesta de la Pregunta 3.</template>
+  </category>
+
+  <category>
+    <pattern> ^ que ^ destaca+ ^ </pattern>
+    <template><srai>CUALES SON TUS 3 MAYORES VIRTUDES</srai></template>
+  </category>
+
+  <category>
+    <pattern> ^ que ^ [te le] hace [mejor especial apto] ^ </pattern>
+    <template><srai>CUALES SON TUS 3 MAYORES VIRTUDES</srai></pattern>
+  </category>
+
+  <!-- Pregunta 4: ¿Te consideras una persona creativa? -->
+
+  <category>
+    <pattern>TE CONSIDERAS UNA PERSONA CREATIVA</pattern>
+    <template>Respuesta de la pregunta 4.</template>
+  </category>
+
+  <category>
+    <pattern>se considera una persona creativa</pattern>
+    <template><srai>TE CONSIDERAS UNA PERSONA CREATIVA</srai></template>
+  </category>
+
+  <category>
+    <pattern> ^ [eres es] ^ creativ+ ^ </pattern>
+    <template><srai>TE CONSIDERAS UNA PERSONA CREATIVA</srai></template>
+  </category>
+
+  <category>
+    <pattern> ^ buena+ idea+ ^ </pattern>
+    <template><srai>TE CONSIDERAS UNA PERSONA CREATIVA</srai></template>
+
+  <!-- Pregunta 5: ¿Por qué deberíamos escogerte a ti? -->
+
+  <category>
+    <pattern>POR QUE DEBERIAMOS ESCOGERTE A TI</pattern>
+    <template>Respuesta de la pregunta 5.</template>
+  </category>
+
+  <category>
+    <pattern>por que deberiamos escoger+ ^ </pattern>
+    <template><srai>POR QUE DEBERIAMOS ESCOGERTE A TI</srai></template>
+  </category>
+
+  <category>
+    <pattern> por que [tu usted] ^ </pattern>
+    <template><srai>POR QUE DEBERIAMOS ESCOGERTE A TI</srai></template>
+
+</aiml>

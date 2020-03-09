@@ -1,0 +1,214 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<aiml version="2.0">
+
+<!-- Primera regla -->
+
+<category>
+	<pattern>Hola</pattern>
+	<template>Hola de nuevo, que tal?</template>
+</category>
+
+<category>
+	<pattern>yo bien, que tal tu</pattern>
+	<template>Estoy genial!!! Me encanta conocer gente nueva.</template>
+</category>
+
+<category>
+	<pattern>como te llamas</pattern>
+	<template>Mi nombre es HALfonso</template>
+</category>
+
+<!-- Ejercicio 2 -->
+
+<!--
+<category>
+	<pattern>Hola *</pattern>
+	<template>Hola, que tal?</template>
+</category>
+-->
+
+<category>
+	<pattern>* que tal tu</pattern>
+	<template>Estoy genial!!!</template>
+</category>
+
+<category>
+	<pattern>Fenomeno, me llamo *</pattern>
+	<template>
+		Que casualidad <star/> yo tambien tengo nombre, me llamo HALberto
+	</template>
+</category>
+
+
+<!-- Ejemplo propierties.txt -->
+
+<category>
+	<pattern>Que musica te gusta</pattern>
+	<template>
+		Me gusta mucho el <bot name="music"/> y tengo <bot name="age"/> años
+	</template>
+</category>
+
+
+<!-- Almacenamiento de variables globales -->
+
+<category>
+	<pattern> ^ me llamo * </pattern>
+	<template>
+		<think><set name="nombre"><star index="2"/></set></think>
+		<get name="nombre"/> es un bonito nombre.
+	</template>
+</category>
+
+<!--
+<category>
+	<pattern>cual es mi nombre</pattern>
+	<template>Tu nombre es <get name="nombre"/></template>
+</category>
+-->
+
+
+<!-- Variables locales -->
+
+<category>
+	<pattern>mi color favorito es el *</pattern>
+	<template>
+		<think><set var="color"><star/></set></think>
+		El <get var="color"/> es un color que no me gusta.
+	</template>
+</category>
+
+
+<!-- Utilización de srai -->
+
+<category>
+	<pattern>* mi nombre</pattern>
+	<template><srai>cual es mi nombre</srai></template>
+</category>
+
+<category>
+	<pattern>^ como me llamo</pattern>
+	<template><srai>cual es mi nombre</srai></template>
+</category>
+
+
+<!-- Ejercicio 3 - ignorada en clase -->
+
+<category>
+	<pattern>buenos dias</pattern>
+	<template><srai>hola</srai></template>
+</category>
+
+
+<!-- Utilización de set -->
+
+<category>
+	<pattern>Es <set>color</set> un color</pattern>
+	<template>Si, <star/> es un color</template>
+</category>
+
+<category>
+	<pattern>Es * un color</pattern>
+	<template>No, <star/> no es un color</template>
+</category>
+
+
+<!-- Utilización de map -->
+
+<category>
+	<pattern>cual es la capital de <set>capital</set></pattern>
+	<template>
+		La capital de <star/> es <map name="capital"><star/></map>
+	</template>
+</category>
+
+<category>
+	<pattern>cual es la capital de *</pattern>
+	<template>No se cual es la capital de <star/></template>
+</category>
+
+
+<!-- Utilización de that - no la suele usar el profesor -->
+
+<category>
+	<pattern>^ cafe ^</pattern>
+	<template>Te gusta el cafe.</template>
+</category>
+
+<category>
+	<pattern>Si</pattern>
+	<that>TE GUSTA EL CAFE</that>
+	<template>Lo prefieres solo o con leche.</template>
+</category>
+
+<category>
+	<pattern>No</pattern>
+	<that>TE GUSTA EL CAFE</that>
+	<template>A mi tampoco</template>
+</category>
+
+
+<!-- Utilización de random - se la salta en clase -->
+
+
+<!-- Estructura condicional - parecida a switch -->
+
+<category>
+	<pattern>cual es mi nombre</pattern>
+	<template>
+		<condition name="nombre">
+			<li value="unknown">Aun no me has dicho tu nombre</li>
+			<li>Tu nombre es <get name="nombre"/></li>
+		</condition>
+	</template>
+</category>
+
+
+<!-- Ciclo - no muestra la cuenta -->
+
+<category>
+	<pattern>Cuenta hasta <set>number</set></pattern>
+	<template>
+		<think>
+			<set var="contador">1</set>
+			<set var="salida">1</set>
+		</think>
+		<condition var="contador">
+			<li><value><star/></value><get var="salida"/></li>
+			<li>
+				<think>
+					<set var="contador"><map name="succesor"><get var="contador"/></map></set>
+					<set var="salida"><get var="salida"/><get var="contador"/></set>
+				</think>
+			</li>
+		</condition>
+	</template>
+</category>
+
+
+<!-- Utilización de topic -->
+
+<category>
+	<pattern>el <set>number</set> (de) <set>month_es</set></pattern>
+	<template>seguro que quieres ese dia?
+		<think><set name="topic">decision</set></think>
+	</template>
+</category>
+
+<topic name="decision">
+	<category>
+		<pattern>^ si ^</pattern>
+		<template>voy a mirar si ese dia hay horas libres
+			<think><set name="topic">unknown</set></think>
+		</template>
+	</category>
+
+	<category>
+		<pattern>^ no ^</pattern>
+		<template>que otro dia le gustaria?
+			<think><set name="topic">unknown</set></think>
+		</template>
+	</category>
+</topic>
+
+</aiml>
