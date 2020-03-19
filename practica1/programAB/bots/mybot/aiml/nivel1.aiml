@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<aiml version="2.0">
+
+  <!-- INICIO DE CONVERSACIÓN -> QUISIERA UNA CITA -->
+
+  <category>
+    <pattern> QUISIERA UNA CITA PARA EL * DE <set>month_es</set></pattern>
+    <template>
+
+      <think>
+
+        <set var="mes"><star index="2"/></set>
+        <set var="dia"><star/></set>
+
+        <set var="num_dia">
+          <condition var="dia">
+            <li value="1">01</li>
+            <li value="2">02</li>
+            <li value="3">03</li>
+            <li value="4">04</li>
+            <li value="5">05</li>
+            <li value="6">06</li>
+            <li value="7">07</li>
+            <li value="8">08</li>
+            <li value="9">09</li>
+            <li><get var="dia"/></li>
+          </condition>
+        </set>
+
+        <set var="num_mes">
+          <condition var="mes">
+            <li value="Enero">01</li>
+            <li value="Febrero">02</li>
+            <li value="Marzo">03</li>
+            <li value="Abril">04</li>
+            <li value="Mayo">05</li>
+            <li value="Junio">06</li>
+            <li value="Julio">07</li>
+            <li value="Agosto">08</li>
+            <li value="Septiembre">09</li>
+            <li value="Octubre">10</li>
+            <li value="Noviembre">11</li>
+            <li>12</li>
+          </condition>
+        </set>
+
+        <set name="fecha">
+          <get var="num_dia"/>-<get var="num_mes"/>-20
+        </set>
+
+        <set var="pos">
+          <srai>FINDITEM null IN
+            <srai>SUBLIST FROM 8 TO 20 OF
+              <srai>LIST OF DAY <get name="fecha"/></srai>
+            </srai>
+          </srai>
+        </set>
+
+        <set var="inicio">8</set>
+        <set var="fin">20</set>
+
+      </think>
+
+      <condition var="pos">
+        <li value="0">
+          Lo siento, ese día lo tengo completo. ¿Querría otro día?
+          <think><set name="topic">dia_ocupado</set></think>
+        </li>
+        <li>
+          De acuerdo.
+          <think><set name="topic">seleccion_hora</set></think>
+        </li>
+      </condition>
+
+    </template>
+  </category>
+
+  <category>
+    <pattern> Quiero ir el * de <set>month_es</set></pattern>
+    <template>
+      <srai>QUISIERA UNA CITA PARA EL <star/> DE <star index="2"/></srai>
+    </template>
+  </category>
+
+  <!-- DÍA OCUPADO, SELECCIÓN DE OTRO? -->
+
+  <topic name="dia_ocupado">
+
+    <category>
+      <pattern> Si </pattern>
+      <template>
+        <think>
+          <set name="topic">unknown</set>
+        </think>
+        Estupendo, ¿qué otra fecha le vendría bien?
+      </template>
+    </category>
+
+    <category>
+      <pattern> ^ no ^ </pattern>
+      <template>
+        ¡Vuelva cuando quieras!
+        <think><set name="topic">unknown</set></think>
+      </template>
+    </category>
+
+  </topic>
+
+</aiml>

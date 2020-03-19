@@ -5,7 +5,11 @@
 
   <category>
     <pattern>HABLAME UN POCO DE TI</pattern>
-    <template>Respuesta de la Pregunta 1.</template>
+    <template>
+      Soy una persona trabajadora a la que le encanta superarse constantemente y
+      dar lo mejor de mi. Soy muy perfeccionista y lucho por conseguir cualquier
+      objetivo que se me pone por delante.
+    </template>
   </category>
 
   <category>
@@ -27,7 +31,10 @@
 
   <category>
     <pattern>CUAL ES [TU SU] MAYOR DEFECTO</pattern>
-    <template>Respuesta de la Pregunta 2.</template>
+    <template>
+      En ocasiones me gusta trabajar más de forma individual durante un tiempo
+      para aprenderlo todo.
+    </template>
   </category>
 
   <category>
@@ -56,7 +63,13 @@
 
   <category>
     <pattern>CUALES SON [TUS SUS] [3 TRES] MAYORES VIRTUDES</pattern>
-    <template>Respuesta de la Pregunta 3.</template>
+    <template>
+      Me encanta aprender y mejorar tanto profesional como personalmente y creo
+      que en esta empresa puedo conseguirlo. Además me siento obligado a ayudar
+      a mis compañeros siempre que lo necesitan. Finalmente no me agobio ante
+      ningún problema, solo me esfuerzo más aún para conseguir cualquier meta
+      que me proponga.
+    </template>
   </category>
 
   <category>
@@ -66,14 +79,18 @@
 
   <category>
     <pattern> ^ que ^ [te le] hace [mejor especial apto] ^ </pattern>
-    <template><srai>CUALES SON TUS 3 MAYORES VIRTUDES</srai></pattern>
+    <template><srai>CUALES SON TUS 3 MAYORES VIRTUDES</srai></template>
   </category>
 
   <!-- Pregunta 4: ¿Te consideras una persona creativa? -->
 
   <category>
     <pattern>TE CONSIDERAS UNA PERSONA CREATIVA</pattern>
-    <template>Respuesta de la pregunta 4.</template>
+    <template>
+      Creo que la creatividad siempre ha sido mi mejor compañera, pues me ha
+      permitido reinventarme cuando ha sino necesario, encontrar soluciones
+      diferentes y crear productos sugerentes para el público.
+    </template>
   </category>
 
   <category>
@@ -87,23 +104,34 @@
   </category>
 
   <category>
+    <pattern> ^ [te se] considera+ ^ creativ+ ^ </pattern>
+    <template><srai>TE CONSIDERAS UNA PERSONA CREATIVA</srai></template>
+  </category>
+
+  <category>
     <pattern> ^ buena+ idea+ ^ </pattern>
     <template><srai>TE CONSIDERAS UNA PERSONA CREATIVA</srai></template>
+  </category>
 
   <!-- Pregunta 5: ¿Por qué deberíamos escogerte a ti? -->
 
   <category>
     <pattern>POR QUE DEBERIAMOS ESCOGERTE A TI</pattern>
-    <template>Respuesta de la pregunta 5.</template>
+    <template>
+      Estoy deseando empezar a trabajar y enseñar lo que soy capaz de hacer.
+      Pienso demostrar al mundo mi consistencia y amor por la programación y el
+      fracaso no será nunca una opción.
+    </template>
   </category>
 
   <category>
-    <pattern>por que deberiamos escoger+ ^ </pattern>
+    <pattern> ^ [deberiamos tendriamos] ^ escoger+ ^ </pattern>
     <template><srai>POR QUE DEBERIAMOS ESCOGERTE A TI</srai></template>
   </category>
 
   <category>
-    <pattern> por que [tu usted] ^ </pattern>
+    <pattern>por que [tu usted] ^ </pattern>
     <template><srai>POR QUE DEBERIAMOS ESCOGERTE A TI</srai></template>
+  </category>
 
 </aiml>
