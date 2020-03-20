@@ -1,5 +1,5 @@
-07-02-20:null null null null null null null ocupado ocupado ocupado ocupado ocupado ocupado ocupado ocupado ocupado ocupado ocupado ocupado ocupado ocupado null null null
-08-02-20:null null null null null null null null null null null null null null null null null null null null null null null null
+07-02-20:null null null null null null null ocupado ocupado null null ocupado null ocupado ocupado ocupado ocupado ocupado ocupado ocupado ocupado null null null
+08-02-20:ocupado ocupado ocupado ocupado ocupado ocupado ocupado ocupado ocupado ocupado ocupado null ocupado ocupado ocupado ocupado ocupado ocupado ocupado ocupado ocupado ocupado ocupado ocupado
 09-02-20:null null null null null null null null null null null null null null null null null null null null null null null null
 10-02-20:null null null null null null null null null null null null null null null null null null null null null null null null
 11-02-20:null null null null null null null null null null null null null null null null null null null null null null null null
@@ -14,7 +14,7 @@
 20-02-20:null null null null null null null null null null null null null null null null null null null null null null null null
 21-02-20:null null null null null null null null null null null null null null null null null null null null null null null null
 22-02-20:null null null null null null null null null null null null null null null null null null null null null null null null
-23-02-20:null null null null null null ocupado ocupado ocupado null null null null null null null null null null null null null null null
+23-02-20:null null null null null null ocupado ocupado ocupado null ocupado null null null null null null null null null null null null null
 24-02-20:null null null null null null null OCUPADO null null null null null null null null null null null null null null null null
 25-02-20:�PARA ESTA SEMANA?
 26-02-20:�PARA ESTA SEMANA?
