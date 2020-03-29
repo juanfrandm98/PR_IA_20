@@ -187,7 +187,7 @@
 
 
 <!-- Utilización de topic -->
-
+<!--
 <category>
 	<pattern>el <set>number</set> (de) <set>month_es</set></pattern>
 	<template>seguro que quieres ese dia?
@@ -210,5 +210,5 @@
 		</template>
 	</category>
 </topic>
-
+-->
 </aiml>

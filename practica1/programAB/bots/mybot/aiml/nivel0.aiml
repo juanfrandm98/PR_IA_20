@@ -13,7 +13,12 @@
   </category>
 
   <category>
-    <pattern> ^ [hableme cuenteme contarme decirme] ^ usted ^ </pattern>
+    <pattern> ^ [hableme cuenteme contarme decirme digame] ^ usted ^ </pattern>
+    <template><srai>HABLAME UN POCO DE TI</srai></template>
+  </category>
+
+  <category>
+    <pattern> ^ [te le] ^ caracteriza ^ </pattern>
     <template><srai>HABLAME UN POCO DE TI</srai></template>
   </category>
 
@@ -23,7 +28,7 @@
   </category>
 
   <category>
-    <pattern> ^ [describete describase describir*] ^ </pattern>
+    <pattern> ^ [describete describase describir] ^ </pattern>
     <template><srai>HABLAME UN POCO DE TI</srai></template>
   </category>
 
@@ -39,6 +44,11 @@
 
   <category>
     <pattern> ^ fall+ ^ </pattern>
+    <template><srai>CUAL ES TU MAYOR DEFECTO</srai></template>
+  </category>
+
+  <category>
+    <pattern> ^ err+ ^ </pattern>
     <template><srai>CUAL ES TU MAYOR DEFECTO</srai></template>
   </category>
 
@@ -82,13 +92,18 @@
     <template><srai>CUALES SON TUS 3 MAYORES VIRTUDES</srai></template>
   </category>
 
+  <category>
+    <pattern> ^ mejor ^ [ti usted] ^ </pattern>
+    <template><srai>CUALES SON TUS 3 MAYORES VIRTUDES</srai></template>
+  </category>
+
   <!-- Pregunta 4: ¿Te consideras una persona creativa? -->
 
   <category>
     <pattern>TE CONSIDERAS UNA PERSONA CREATIVA</pattern>
     <template>
       Creo que la creatividad siempre ha sido mi mejor compañera, pues me ha
-      permitido reinventarme cuando ha sino necesario, encontrar soluciones
+      permitido reinventarme cuando ha sido necesario, encontrar soluciones
       diferentes y crear productos sugerentes para el público.
     </template>
   </category>
@@ -113,6 +128,11 @@
     <template><srai>TE CONSIDERAS UNA PERSONA CREATIVA</srai></template>
   </category>
 
+  <category>
+    <pattern> ^ creatividad ^ </pattern>
+    <template><srai>TE CONSIDERAS UNA PERSONA CREATIVA</srai></template>
+  </category>
+
   <!-- Pregunta 5: ¿Por qué deberíamos escogerte a ti? -->
 
   <category>
@@ -130,7 +150,17 @@
   </category>
 
   <category>
-    <pattern>por que [tu usted] ^ </pattern>
+    <pattern> por que [tu usted] ^ </pattern>
+    <template><srai>POR QUE DEBERIAMOS ESCOGERTE A TI</srai></template>
+  </category>
+
+  <category>
+    <pattern> ^ (mejor buen+) candidat+ (perfect+ indicad+ ideal adecuad+) ^ </pattern>
+    <template><srai>POR QUE DEBERIAMOS ESCOGERTE A TI</srai></template>
+  </category>
+
+  <category>
+    <pattern> ^ [cargo puesto] ^ </pattern>
     <template><srai>POR QUE DEBERIAMOS ESCOGERTE A TI</srai></template>
   </category>
 

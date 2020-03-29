@@ -1,7 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <aiml version="2.0">
 
+  <!--/////////////////////////////////////////////-->
+  <!--                                             -->
   <!-- INICIO DE CONVERSACIÓN -> QUISIERA UNA CITA -->
+  <!--                                             -->
+  <!--/////////////////////////////////////////////-->
+
+  <category>
+    <pattern> QUISIERA UNA CITA </pattern>
+    <template> Hola, ¿para cuándo la querría? </template>
+  </category>
+
+  <category>
+    <pattern> ^ [quiero quisiera querria gustaria busc+] ^ cita </pattern>
+    <template>
+      <srai> QUISIERA UNA CITA </srai>
+    </template>
+  </category>
 
   <category>
     <pattern> QUISIERA UNA CITA PARA EL <set>number</set> DE <set>month_es</set></pattern>
@@ -19,7 +35,7 @@
 
         <!-- Obtenemos el horario laboral del día deseado -->
         <set var="horario">
-          <srai>SUBLIST FROM <srai> ORDINAL 09:00 </srai> TO <srai> ORDINAL 19:00 </srai> OF
+          <srai>SUBLIST FROM <srai> ORDINAL 08:00 </srai> TO <srai> ORDINAL 19:00 </srai> OF
             <srai>LIST OF DAY <get name="fecha"/></srai>
           </srai>
         </set>
@@ -30,13 +46,15 @@
 
       </think>
 
-      Fecha: <get name="fecha"/>
-      Agenda: <get var="horario"/>
+      <!--
+        Fecha: <get name="fecha"/>
+        Agenda: <get var="horario"/>
+      -->
 
       <condition var="pos">
         <li value="0">
           Lo siento, ese día lo tengo completo. ¿Querría otro día?
-          <think><set name="topic">dia_ocupado</set></think>
+          <think><set name="topic">cambio_dia</set></think>
         </li>
         <li>
           <think>
@@ -81,8 +99,10 @@
                 </li>
               </condition>
           </think>
-          Bien, podría venir a estas horas: <get name="horas_disponibles"/>, ¿le interesa alguna?
-          <!--<think><set name="topic">seleccion_hora</set></think>-->
+          Bien, podría venir a estas horas:
+          <get name="horas_disponibles"/>
+          ¿Le interesa alguna?
+          <think><set name="topic">seleccion_hora</set></think>
         </li>
       </condition>
 
@@ -90,28 +110,44 @@
   </category>
 
   <category>
-    <pattern> Quiero ir el <set>number</set> de <set>month_es</set></pattern>
-    <template>
-      <srai>QUISIERA UNA CITA PARA EL <star/> DE <star index="2"/></srai>
-    </template>
+    <pattern> ^ <set>number</set> ^ <set>month_es</set> ^ </pattern>
+    <template> <srai> QUISIERA UNA CITA PARA EL <star index="2"/> DE <star index="4"/> </srai> </template>
   </category>
 
-  <!-- DÍA OCUPADO, SELECCIÓN DE OTRO? -->
+  <!--/////////////////////////////////////////////-->
+  <!--                                             -->
+  <!--      DÍA OCUPADO -> ¿SELECCIÓN DE OTRO?     -->
+  <!--                                             -->
+  <!--/////////////////////////////////////////////-->
 
-  <topic name="dia_ocupado">
+  <topic name="cambio_dia">
 
+    <!-- El cliente quiere otro día, sin especificar cuál aún -->
     <category>
-      <pattern> Si </pattern>
+      <pattern> ^ SI ^ </pattern>
       <template>
-        <think>
-          <set name="topic">unknown</set>
-        </think>
         Estupendo, ¿qué otra fecha le vendría bien?
       </template>
     </category>
 
     <category>
-      <pattern> ^ no ^ </pattern>
+      <pattern> de acuerdo </pattern>
+      <template><srai>SI</srai></template>
+    </category>
+
+    <category>
+      <pattern> por supuesto </pattern>
+      <template><srai>SI</srai></template>
+    </category>
+
+    <category>
+      <pattern> ^ [vale ok perfecto claro] ^ </pattern>
+      <template><srai>SI</srai></template>
+    </category>
+
+    <!-- El cliente no quiere ningún otro día -->
+    <category>
+      <pattern> ^ NO ^ </pattern>
       <template>
         ¡Vuelva cuando quieras!
         <think><set name="topic">unknown</set></think>
@@ -120,44 +156,192 @@
 
   </topic>
 
-  <!-- DÍA DISPONIBLE, SELECCIÓN DE HORA -->
-<!--
+  <!--/////////////////////////////////////////////-->
+  <!--                                             -->
+  <!--     DÍA DISPONIBLE -> SELECCIÓN DE HORA     -->
+  <!--                                             -->
+  <!--/////////////////////////////////////////////-->
+
   <topic name="seleccion_hora">
-  -->
-  <category>
-    <pattern> A LA+ <set>number</set> </pattern>
-    <template>
-      <think>
-        <set var="hora">
-          <srai> ORDINAL <map name="num_hora"><star/></map></srai>
-        </set>
 
-        <set var="disponible">
-          <srai> IS BUSY DAY <get name="fecha"/> AT <get var="hora"/> </srai>
-        </set>
-      </think>
+    <!-- El cliente quiere una hora pero no especifica cuál -->
+    <category>
+      <pattern> ^ SI ^ </pattern>
+      <template> Muy bien, ¿a qué hora le gustaría venir? </template>
+    </category>
 
-      <condition var="disponible">
-        <li value="FALSE">
-          Hora: <get var="hora"/>
-          Perfecto, nos vemos entonces.
-          <think>
-            <set name="topic">unknown</set>
+    <!-- El cliente quiere una hora concreta -->
+    <category>
+      <pattern> # A LA+ <set>number</set> # </pattern>
+      <template>
+        <think>
+          <set var="hora"><map name="num_hora"><star index="2"/></map></set>
 
-            <srai>
-              MARK OCUPADO AT  <get var="hora"/> ON <get name="fecha"/>
-            </srai>
-          </think>
-        </li>
-        <li>
-          No, esa hora no está disponible.
-        </li>
-      </condition>
+          <set var="valores"><readset>laborales</readset></set>
 
-    </template>
-  </category>
-    <!--
+          <set var="pos">
+            <srai> FINDITEM <get var="hora"/> IN <get var="valores"/> </srai>
+          </set>
+        </think>
+
+        <condition var ="pos">
+          <li value="0">
+            Lo siento, a esa hora estamos cerrados.
+            Ese día podría venir en estas horas: <get name="horas_disponibles"/>
+          </li>
+          <li>
+            <think>
+              <set var="disponible">
+                <srai> IS BUSY DAY <get name="fecha"/> AT <get var="hora"/> </srai>
+              </set>
+            </think>
+
+            <condition var="disponible">
+              <li value="FALSE">
+                Hora: <get var="hora"/>
+                Perfecto, nos vemos entonces.
+                <think>
+                  <srai>
+                    MARK OCUPADO AT  <get var="hora"/> ON <get name="fecha"/>
+                  </srai>
+                  <set name="topic">unknown</set>
+                </think>
+              </li>
+              <li>
+                No, esa hora no está disponible. Podría: <get name="horas_disponibles"/>
+              </li>
+            </condition>
+          </li>
+        </condition>
+      </template>
+    </category>
+
+    <!-- El cliente no quiere ninguna de esas horas -->
+    <category>
+      <pattern> ^ NO ^ </pattern>
+      <template>
+        ¿Querria una cita otro dia?
+        <think><set name="topic">cambio_dia</set></think>
+      </template>
+    </category>
+
+    <!-- El cliente solicita otro día -->
+    <category>
+      <pattern> ^ OTRO DIA ^ </pattern>
+      <template>
+        Está bien, ¿qué otro día le viene bien?
+        <think><set name="topic">unknown</set></think>
+      </template>
+    </category>
+
+    <category>
+      <pattern> ^ [cambiar modificar] ^ dia ^ </pattern>
+      <template> <srai> OTRO DIA </srai> </template>
+    </category>
+
+    <!-- El cliente quiere cualquiera de las horas -->
+    <category>
+      <pattern> ME DA IGUAL </pattern>
+      <template>
+        <think>
+          <set name="propuesta">
+            <srai> TOP <get name="horas_disponibles"/> </srai>
+          </set>
+
+          <set name="resto">
+            <srai> REMAIN <get name="horas_disponibles"/> </srai>
+          </set>
+        </think>
+        De acuerdo, ¿quiere venir a las <get name="propuesta"/> entonces?
+        <think> <set name="topic">propuesta_hora</set> </think>
+      </template>
+    </category>
+
+    <category>
+      <pattern> ^ todas ^ bien ^ </pattern>
+      <template> <srai> ME DA IGUAL </srai> </template>
+    </category>
+
+    <category>
+      <pattern> ^ es ^ [igual indiferente] ^ </pattern>
+      <template> <srai> ME DA IGUAL </srai> </template>
+    </category>
+
+    <category>
+      <pattern> ^ [elige elija] ^ [tu usted] ^ </pattern>
+      <template> <srai> ME DA IGUAL </srai> </template>
+    </category>
+
   </topic>
--->
+
+  <!--/////////////////////////////////////////////-->
+  <!--                                             -->
+  <!--       DA IGUAL -> PROPUESTA HORA            -->
+  <!--                                             -->
+  <!--/////////////////////////////////////////////-->
+
+  <topic name="propuesta_hora">
+
+    <!-- El cliente está satisfecho con la hora propuesta -->
+    <category>
+      <pattern> ^ SI ^ </pattern>
+      <template>
+        <think>
+          <srai>
+            MARK OCUPADO AT <get name="propuesta"/> ON <get name="fecha"/>
+          </srai>
+        </think>
+        Perfecto, nos vemos entonces a las <get name="propuesta"/>.
+        <think> <set name="topic">unknown</set> </think>
+      </template>
+    </category>
+
+    <category>
+      <pattern> de acuerdo ^ </pattern>
+      <template> <srai> SI </srai> </template>
+    </category>
+
+    <category>
+      <pattern> ^ [bien perfecto correcto] ^ </pattern>
+      <template> <srai> SI </srai> </template>
+    </category>
+
+    <!-- El cliente quiere que le propongan otra hora -->
+    <category>
+      <pattern> ^ NO ^ </pattern>
+      <template>
+        <think>
+          <set name="propuesta">
+            <srai> TOP <get name="resto"/> </srai>
+          </set>
+
+          <set name="resto">
+            <srai> REMAIN <get name="resto"/> </srai>
+          </set>
+        </think>
+
+        <condition name="propuesta">
+          <li value="$">
+            Pues no me quedan más fechas para ese día. Dime otro día que puedas venir.
+            <think><set name="topic">unknown</set></think>
+          </li>
+          <li>
+            ¿Te viene mejor a las <get name="propuesta"/>?
+          </li>
+        </condition>
+      </template>
+    </category>
+
+    <category>
+      <pattern> ^ otr+ (dia hora) ^ </pattern>
+      <template> <srai> NO </srai> </template>
+    </category>
+
+    <category>
+      <pattern> ^ no ^ [bien puedo podria] ^ </pattern>
+      <template> <srai> NO </srai> </template>
+    </category>
+
+  </topic>
 
 </aiml>
