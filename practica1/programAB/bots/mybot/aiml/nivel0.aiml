@@ -1,6 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <aiml version="2.0">
 
+  <!-- //////////////////////////////////////////////////////////// -->
+  <!--                                                              -->
+  <!--      Práctica 1 - Nivel 0                                    -->
+  <!--      Juan Francisco Díaz Moreno                              -->
+  <!--      Curso 19/20 - Grupo D2                                  -->
+  <!--                                                              -->
+  <!-- //////////////////////////////////////////////////////////// -->
+
   <!-- Pregunta 1: Háblame un poco de ti -->
 
   <category>
