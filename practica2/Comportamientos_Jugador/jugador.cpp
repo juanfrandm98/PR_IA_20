@@ -5,11 +5,13 @@
 #include <cmath>
 #include <set>
 #include <stack>
+#include <queue>
 
 
 // Este es el método principal que debe contener los 4 Comportamientos_Jugador
 // que se piden en la práctica. Tiene como entrada la información de los
 // sensores y devuelve la acción a realizar.
+/*
 Action ComportamientoJugador::think(Sensores sensores) {
 	Action accion = actIDLE;
 	// Estoy en el nivel 1
@@ -34,6 +36,31 @@ Action ComportamientoJugador::think(Sensores sensores) {
 	}
 
   return accion;
+}*/
+Action ComportamientoJugador::think( Sensores sensores ) {
+
+	// Calculamos el camino hasta el destino si no tenemos aun un plan
+	if( !hayplan ) {
+		actual.fila = sensores.posF;
+		actual.columna = sensores.posC;
+		actual.orientacion = sensores.sentido;
+		destino.fila = sensores.destinoF;
+		destino.columna = sensores.destinoC;
+		hayplan = pathFinding( sensores.nivel, actual, destino, plan );
+	}
+
+	Action sigAccion;
+
+	if( hayplan and plan.size() > 0 ) {		// Hay un plan no vacío
+		sigAccion = plan.front();						// Tomamos la siguiente acción del hayPlan
+		plan.erase( plan.begin() );					// Eliminamos la accion de la lista de acciones
+	} else {
+		// Aquí solo entra cuando no es posible encontrar un comportamiento o está
+		// mal implementado el método de búsqueda
+	}
+
+	return sigAccion;
+
 }
 
 
@@ -45,7 +72,7 @@ bool ComportamientoJugador::pathFinding (int level, const estado &origen, const 
 			      return pathFinding_Profundidad(origen,destino,plan);
 						break;
 		case 2: cout << "Busqueda en Anchura\n";
-			      // Incluir aqui la llamada al busqueda en anchura
+			      return pathFinding_Anchura( origen, destino, plan );
 						break;
 		case 3: cout << "Busqueda Costo Uniforme\n";
 						// Incluir aqui la llamada al busqueda de costo uniforme
@@ -119,7 +146,6 @@ struct ComparaEstados{
 	}
 };
 
-
 // Implementación de la búsqueda en profundidad.
 // Entran los puntos origen y destino y devuelve la
 // secuencia de acciones en plan, una lista de acciones.
@@ -192,11 +218,77 @@ bool ComportamientoJugador::pathFinding_Profundidad(const estado &origen, const 
 	return false;
 }
 
+// Implementación de la búsqueda en anchura.
+// Entran los puntos origen y destino y devuelve la secuencia de acciones en
+// plan, una lista de acciones.
+bool ComportamientoJugador::pathFinding_Anchura( const estado & origen, const estado & destino, list<Action> &plan ) {
 
+	// Borro la lista
+	cout << "Calculando plan\n";
+	plan.clear();
+	set<estado,ComparaEstados> generados; // Lista de Cerrados
+	queue<nodo> cola;											// Lista de abiertos
 
+	nodo current;
+	current.st = origen;
+	current.secuencia.empty();
 
+	cola.push( current );
 
+	while( !cola.empty() and ( current.st.fila != destino.fila or current.st.columna != destino.columna ) ) {
 
+		cola.pop();
+		generados.insert( current.st );
+
+		// Generar descendiente de girar a la derecha
+		nodo hijoTurnR = current;
+		hijoTurnR.st.orientacion = ( hijoTurnR.st.orientacion + 1 ) % 4;
+
+		if( generados.find( hijoTurnR.st ) == generados.end() ) {
+			hijoTurnR.secuencia.push_back( actTURN_R );
+			cola.push( hijoTurnR );
+		}
+
+		// Generar descendiente a la izquierda
+		nodo hijoTurnL = current;
+		hijoTurnL.st.orientacion = ( hijoTurnL.st.orientacion + 3 ) % 4;
+
+		if( generados.find( hijoTurnL.st ) == generados.end() ) {
+			hijoTurnL.secuencia.push_back( actTURN_L );
+			cola.push( hijoTurnL );
+		}
+
+		// Generar descendiente de avanzar
+		nodo hijoForward = current;
+		if( !HayObstaculoDelante( hijoForward.st ) )
+			if( generados.find( hijoForward.st ) == generados.end() ) {
+				hijoForward.secuencia.push_back( actFORWARD );
+				cola.push( hijoForward );
+			}
+
+		// Tomo el siguiente valor de la cola
+		if( !cola.empty() )
+			current = cola.front();
+
+	}
+
+	cout << "Terminada la búsqueda\n";
+
+	if( current.st.fila == destino.fila and current.st.columna == destino.columna ) {
+		cout << "Cargando el plan\n";
+		plan = current.secuencia;
+		cout << "longitud del plan: " << plan.size() << endl;
+
+		PintaPlan( plan );
+		VisualizaPlan( origen, plan );
+
+		return true;
+	} else {
+		cout << "No encontrado plan\n";
+		return false;
+	}
+
+}
 
 // Sacar por la términal la secuencia del plan obtenido
 void ComportamientoJugador::PintaPlan(list<Action> plan) {
