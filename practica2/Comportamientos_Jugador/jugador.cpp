@@ -158,9 +158,8 @@ struct ComparaNodos {
 		if( ( a.st.fila > n.st.fila ) or
 				( a.st.fila == n.st.fila and a.st.columna > n.st.columna ) or
 				( a.st.fila == n.st.fila and a.st.columna == n.st.columna and a.st.orientacion > n.st.orientacion ) or
-				( a.st.fila == n.st.fila and a.st.columna == n.st.columna and a.st.orientacion == n.st.orientacion and a.bikini != n.bikini ) or
-				( a.st.fila == n.st.fila and a.st.columna == n.st.columna and a.st.orientacion == n.st.orientacion and a.bikini == n.bikini and a.zapatillas != n.zapatillas ) or
-			 	( a.st.fila == n.st.fila and a.st.columna == n.st.columna and a.st.orientacion == n.st.orientacion and a.bikini == n.bikini and a.zapatillas == n.zapatillas and a.coste > n.coste ) )
+				( a.st.fila == n.st.fila and a.st.columna == n.st.columna and a.st.orientacion == n.st.orientacion and a.bikini > n.bikini ) or
+				( a.st.fila == n.st.fila and a.st.columna == n.st.columna and a.st.orientacion == n.st.orientacion and a.bikini == n.bikini and a.zapatillas > n.zapatillas ) )
 				return true;
 		else
 				return false;
@@ -329,7 +328,8 @@ bool ComportamientoJugador::pathFinding_Costo_Uniforme( const estado & origen, c
 	nodo current;
 	current.st = origen;
 	current.coste = 0;
-	comprobarObjetos( mapaResultado[current.st.fila][current.st.columna], current.bikini, current.zapatillas );
+	current.bikini = false;
+	current.zapatillas = false;
 	current.secuencia.empty();
 
 	cola.push( current );
@@ -337,6 +337,8 @@ bool ComportamientoJugador::pathFinding_Costo_Uniforme( const estado & origen, c
 	while( !cola.empty() and ( current.st.fila != destino.fila or current.st.columna != destino.columna ) ) {
 
 		cola.pop();
+
+		comprobarObjetos( mapaResultado[current.st.fila][current.st.columna], current.bikini, current.zapatillas );
 		generados.insert( current );
 
 		// Generar descendiente de girar a la derecha
@@ -362,12 +364,7 @@ bool ComportamientoJugador::pathFinding_Costo_Uniforme( const estado & origen, c
 		// Generar descendiente de avanzar
 		nodo hijoForward = current;
 		if( !HayObstaculoDelante( hijoForward.st ) ) {
-			int fil, col;
-			calcularCoordenadasAvance( hijoForward.st, fil, col );
-			hijoForward.coste += costeCasilla( mapaResultado[fil][col], hijoForward.bikini, hijoForward.zapatillas );
-			if( !hijoForward.bikini or !hijoForward.zapatillas )
-				comprobarObjetos( mapaResultado[fil][col], hijoForward.bikini, hijoForward.zapatillas );
-
+			hijoForward.coste += costeCasilla( mapaResultado[current.st.fila][current.st.columna], hijoForward.bikini, hijoForward.zapatillas );
 			if( generados.find( hijoForward ) == generados.end() ) {
 				hijoForward.secuencia.push_back( actFORWARD );
 				cola.push( hijoForward );
@@ -391,6 +388,7 @@ bool ComportamientoJugador::pathFinding_Costo_Uniforme( const estado & origen, c
 		cout << "Cargando el plan\n";
 		plan = current.secuencia;
 		cout << "longitud del plan: " << plan.size() << endl;
+		cout << "coste del plan: " << current.coste << endl;
 
 		PintaPlan( plan );
 		VisualizaPlan( origen, plan );
@@ -486,15 +484,15 @@ int ComportamientoJugador::costeCasilla( unsigned char casilla, bool bikini, boo
 	switch ( casilla ) {
 		case 'A':
 			if( bikini )
-				return 100;
-			else
 				return 10;
+			else
+				return 100;
 			break;
 		case 'B':
 			if( zapatillas )
-				return 50;
-			else
 				return 5;
+			else
+				return 50;
 			break;
 		case 'T':
 			return 2;
