@@ -50,9 +50,13 @@ class ComportamientoJugador : public Comportamiento {
     bool pathFinding(int level, const estado &origen, const estado &destino, list<Action> &plan);
     bool pathFinding_Profundidad(const estado &origen, const estado &destino, list<Action> &plan);
     bool pathFinding_Anchura( const estado & origen, const estado & destino, list<Action> & plan );
+    bool pathFinding_Costo_Uniforme( const estado & origen, const estado & destino, list<Action> &plan );
 
     void PintaPlan(list<Action> plan);
     bool HayObstaculoDelante(estado &st);
+    void calcularCoordenadasAvance( const estado st, int & fil, int & col );
+    int costeCasilla( unsigned char casilla, bool bikini, bool zapatillas );
+    void comprobarObjetos( unsigned char casilla, bool & bikini, bool & zapatillas );
 
 };
 

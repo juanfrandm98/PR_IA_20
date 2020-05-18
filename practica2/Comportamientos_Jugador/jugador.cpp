@@ -49,7 +49,7 @@ Action ComportamientoJugador::think( Sensores sensores ) {
 		hayplan = pathFinding( sensores.nivel, actual, destino, plan );
 	}
 
-	Action sigAccion;
+	Action sigAccion = actIDLE;
 
 	if( hayplan and plan.size() > 0 ) {		// Hay un plan no vacío
 		sigAccion = plan.front();						// Tomamos la siguiente acción del hayPlan
@@ -75,10 +75,10 @@ bool ComportamientoJugador::pathFinding (int level, const estado &origen, const 
 			      return pathFinding_Anchura( origen, destino, plan );
 						break;
 		case 3: cout << "Busqueda Costo Uniforme\n";
-						// Incluir aqui la llamada al busqueda de costo uniforme
+						return pathFinding_Costo_Uniforme( origen, destino, plan );
 						break;
 		case 4: cout << "Busqueda para el reto\n";
-						// Incluir aqui la llamada al algoritmo de búsqueda usado en el nivel 2
+						return pathFinding_Costo_Uniforme( origen, destino, plan );
 						break;
 	}
 	cout << "Comportamiento sin implementar\n";
@@ -133,7 +133,14 @@ bool ComportamientoJugador::HayObstaculoDelante(estado &st){
 
 struct nodo{
 	estado st;
+	int coste;
+	bool bikini;
+	bool zapatillas;
 	list<Action> secuencia;
+
+	bool operator< ( const nodo &n ) const {
+		return coste > n.coste;
+	}
 };
 
 struct ComparaEstados{
@@ -143,6 +150,20 @@ struct ComparaEstados{
 			return true;
 		else
 			return false;
+	}
+};
+
+struct ComparaNodos {
+	bool operator() ( const nodo &a, const nodo &n ) const {
+		if( ( a.st.fila > n.st.fila ) or
+				( a.st.fila == n.st.fila and a.st.columna > n.st.columna ) or
+				( a.st.fila == n.st.fila and a.st.columna == n.st.columna and a.st.orientacion > n.st.orientacion ) or
+				( a.st.fila == n.st.fila and a.st.columna == n.st.columna and a.st.orientacion == n.st.orientacion and a.bikini != n.bikini ) or
+				( a.st.fila == n.st.fila and a.st.columna == n.st.columna and a.st.orientacion == n.st.orientacion and a.bikini == n.bikini and a.zapatillas != n.zapatillas ) or
+			 	( a.st.fila == n.st.fila and a.st.columna == n.st.columna and a.st.orientacion == n.st.orientacion and a.bikini == n.bikini and a.zapatillas == n.zapatillas and a.coste > n.coste ) )
+				return true;
+		else
+				return false;
 	}
 };
 
@@ -170,10 +191,9 @@ bool ComportamientoJugador::pathFinding_Profundidad(const estado &origen, const 
 		// Generar descendiente de girar a la derecha
 		nodo hijoTurnR = current;
 		hijoTurnR.st.orientacion = (hijoTurnR.st.orientacion+1)%4;
-		if (generados.find(hijoTurnR.st) == generados.end()){
+		if (generados.find(hijoTurnR.st) == generados.end()) {
 			hijoTurnR.secuencia.push_back(actTURN_R);
 			pila.push(hijoTurnR);
-
 		}
 
 		// Generar descendiente de girar a la izquierda
@@ -267,8 +287,101 @@ bool ComportamientoJugador::pathFinding_Anchura( const estado & origen, const es
 			}
 
 		// Tomo el siguiente valor de la cola
-		if( !cola.empty() )
+		if( !cola.empty() ) {
 			current = cola.front();
+			while( generados.find(current.st) != generados.end() ) {
+				cola.pop();
+				current = cola.front();
+			}
+		}
+
+	}
+
+	cout << "Terminada la búsqueda\n";
+
+	if( current.st.fila == destino.fila and current.st.columna == destino.columna ) {
+		cout << "Cargando el plan\n";
+		plan = current.secuencia;
+		cout << "longitud del plan: " << plan.size() << endl;
+
+		PintaPlan( plan );
+		VisualizaPlan( origen, plan );
+
+		return true;
+	} else {
+		cout << "No encontrado plan\n";
+		return false;
+	}
+
+}
+
+// Implementación de la búsqueda en costo uniforme.
+// Entran los puntos origen y destino y devuelve la secuencia de acciones en
+// plan, una lista de acciones.
+bool ComportamientoJugador::pathFinding_Costo_Uniforme( const estado & origen, const estado & destino, list<Action> &plan ) {
+
+	// Borro la lista
+	cout << "Calculando plan\n";
+	plan.clear();
+	set<nodo,ComparaNodos> generados; // Lista de Cerrados
+	priority_queue<nodo> cola;						// Lista de abiertos
+
+	nodo current;
+	current.st = origen;
+	current.coste = 0;
+	comprobarObjetos( mapaResultado[current.st.fila][current.st.columna], current.bikini, current.zapatillas );
+	current.secuencia.empty();
+
+	cola.push( current );
+
+	while( !cola.empty() and ( current.st.fila != destino.fila or current.st.columna != destino.columna ) ) {
+
+		cola.pop();
+		generados.insert( current );
+
+		// Generar descendiente de girar a la derecha
+		nodo hijoTurnR = current;
+		hijoTurnR.st.orientacion = ( hijoTurnR.st.orientacion + 1 ) % 4;
+		hijoTurnR.coste += costeCasilla( mapaResultado[hijoTurnR.st.fila][hijoTurnR.st.columna], hijoTurnR.bikini, hijoTurnR.zapatillas );
+
+		if( generados.find( hijoTurnR ) == generados.end() ) {
+			hijoTurnR.secuencia.push_back( actTURN_R );
+			cola.push( hijoTurnR );
+		}
+
+		// Generar descendiente a la izquierda
+		nodo hijoTurnL = current;
+		hijoTurnL.st.orientacion = ( hijoTurnL.st.orientacion + 3 ) % 4;
+		hijoTurnL.coste += costeCasilla( mapaResultado[hijoTurnL.st.fila][hijoTurnL.st.columna], hijoTurnL.bikini, hijoTurnL.zapatillas );
+
+		if( generados.find( hijoTurnL ) == generados.end() ) {
+			hijoTurnL.secuencia.push_back( actTURN_L );
+			cola.push( hijoTurnL );
+		}
+
+		// Generar descendiente de avanzar
+		nodo hijoForward = current;
+		if( !HayObstaculoDelante( hijoForward.st ) ) {
+			int fil, col;
+			calcularCoordenadasAvance( hijoForward.st, fil, col );
+			hijoForward.coste += costeCasilla( mapaResultado[fil][col], hijoForward.bikini, hijoForward.zapatillas );
+			if( !hijoForward.bikini or !hijoForward.zapatillas )
+				comprobarObjetos( mapaResultado[fil][col], hijoForward.bikini, hijoForward.zapatillas );
+
+			if( generados.find( hijoForward ) == generados.end() ) {
+				hijoForward.secuencia.push_back( actFORWARD );
+				cola.push( hijoForward );
+			}
+		}
+
+		// Tomo el siguiente valor de la cola
+		if( !cola.empty() ) {
+			current = cola.top();
+			while( generados.find(current) != generados.end() ) {
+				cola.pop();
+				current = cola.top();
+			}
+		}
 
 	}
 
@@ -352,4 +465,52 @@ void ComportamientoJugador::VisualizaPlan(const estado &st, const list<Action> &
 
 int ComportamientoJugador::interact(Action accion, int valor){
   return false;
+}
+
+void ComportamientoJugador::calcularCoordenadasAvance( const estado st, int & fil, int & col ) {
+
+	fil=st.fila;
+	col=st.columna;
+
+	switch (st.orientacion) {
+		case 0: fil--; break;
+		case 1: col++; break;
+		case 2: fil++; break;
+		case 3: col--; break;
+	}
+
+}
+
+int ComportamientoJugador::costeCasilla( unsigned char casilla, bool bikini, bool zapatillas ) {
+
+	switch ( casilla ) {
+		case 'A':
+			if( bikini )
+				return 100;
+			else
+				return 10;
+			break;
+		case 'B':
+			if( zapatillas )
+				return 50;
+			else
+				return 5;
+			break;
+		case 'T':
+			return 2;
+			break;
+		default:
+			return 1;
+			break;
+	}
+
+}
+
+void ComportamientoJugador::comprobarObjetos( unsigned char casilla, bool & bikini, bool & zapatillas ) {
+
+	if( casilla == 'K' )
+		bikini = true;
+	else if( casilla = 'D' )
+		zapatillas = true;
+
 }
