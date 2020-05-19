@@ -11,52 +11,132 @@
 // Este es el método principal que debe contener los 4 Comportamientos_Jugador
 // que se piden en la práctica. Tiene como entrada la información de los
 // sensores y devuelve la acción a realizar.
-/*
-Action ComportamientoJugador::think(Sensores sensores) {
-	Action accion = actIDLE;
-	// Estoy en el nivel 1
+Action ComportamientoJugador::think( Sensores sensores ) {
 
-	actual.fila        = sensores.posF;
-	actual.columna     = sensores.posC;
+	actual.fila = sensores.posF;
+	actual.columna = sensores.posC;
 	actual.orientacion = sensores.sentido;
 
-	cout << "Fila: " << actual.fila << endl;
-	cout << "Col : " << actual.columna << endl;
-	cout << "Ori : " << actual.orientacion << endl;
+	pintarMapa( sensores );
 
-	destino.fila       = sensores.destinoF;
-	destino.columna    = sensores.destinoC;
+	if( !conozcoPuntoRecarga )
+		conozcoPuntoRecarga = veoPuntoInteres( sensores, recargaFila, recargaColumna, 'X' );
 
-	if (sensores.nivel != 4){
-		bool hay_plan = pathFinding (sensores.nivel, actual, destino, plan);
-	}
-	else {
-		// Estoy en el nivel 2
-		cout << "Aún no implementado el nivel 2" << endl;
-	}
+	if( !tengoBikini and sensores.terreno[0] == 'K' )
+		tengoBikini = true;
 
-  return accion;
-}*/
-Action ComportamientoJugador::think( Sensores sensores ) {
+	if( !tengoZapatillas and sensores.terreno[0] == 'D' )
+		tengoZapatillas = true;
 
 	// Calculamos el camino hasta el destino si no tenemos aun un plan
 	if( !hayplan ) {
-		actual.fila = sensores.posF;
-		actual.columna = sensores.posC;
-		actual.orientacion = sensores.sentido;
 		destino.fila = sensores.destinoF;
 		destino.columna = sensores.destinoC;
 		hayplan = pathFinding( sensores.nivel, actual, destino, plan );
+		objetivo = DESTINO;
 	}
 
-	Action sigAccion = actIDLE;
+	if( sensores.nivel == 4 ) {
+		if( !tengoBikini and objetivo == DESTINO ) {
+			int fil, col;
+			if( veoPuntoInteres( sensores, fil, col, 'K' ) ) {
+				destinoPausado = destino;
+				destino.fila = fil;
+				destino.columna = col;
+				hayplan = pathFinding( sensores.nivel, actual, destino, plan );
+				objetivo = BIKINI;
+			}
+		}
 
-	if( hayplan and plan.size() > 0 ) {		// Hay un plan no vacío
-		sigAccion = plan.front();						// Tomamos la siguiente acción del hayPlan
-		plan.erase( plan.begin() );					// Eliminamos la accion de la lista de acciones
+		if( !tengoZapatillas and objetivo == DESTINO ) {
+			int fil, col;
+			if( veoPuntoInteres( sensores, fil, col, 'D' ) ) {
+				destinoPausado = destino;
+				destino.fila = fil;
+				destino.columna = col;
+				hayplan = pathFinding( sensores.nivel, actual, destino, plan );
+				objetivo = ZAPATILLAS;
+			}
+		}
+
+		if( conozcoPuntoRecarga and necesitoRecargar( sensores ) ) {
+			destinoPausado = destino;
+			destino.fila = recargaFila;
+			destino.columna = recargaColumna;
+			hayplan = pathFinding( sensores.nivel, actual, destino, plan );
+			objetivo = RECARGA;
+		}
+	}
+
+	Action sigAccion;
+	bool accionElegida = false;
+	bool replanificado = false;
+
+	if( sensores.nivel < 4 ) {
+
+		sigAccion = plan.front();
+		plan.erase( plan.begin() );
+
 	} else {
-		// Aquí solo entra cuando no es posible encontrar un comportamiento o está
-		// mal implementado el método de búsqueda
+
+		do {
+
+			// SI EL PLAN NO SE HA TERMINADO, SIGUE DE MANERA NORMAL
+			if( hayplan and plan.size() > 0 ) {
+
+				// Se escoge la siguiente acción en el plan
+				sigAccion = plan.front();
+
+				// Si se quiere ir a un lugar que requiere planificación
+				if( sigAccion == actFORWARD and necesitoReplanificar( sensores ) and !replanificado ) {
+					cout << "QUIERO REPLAN" << endl;
+					hayplan = pathFinding( sensores.nivel, actual, destino, plan );
+					replanificado = true;
+				// Si se quiere ir a un lugar en el que hay un aldeano en este momento
+				} else if( sigAccion == actFORWARD and EsAldeano( sensores.superficie[2] ) ) {
+					sigAccion = actIDLE;
+					accionElegida = true;
+				// Si no hay ningún impedimento para avanzar
+				} else {
+					plan.erase( plan.begin() );
+					accionElegida = true;
+				}
+
+			// SI EL PLAN SE HA TERMINADO Y NO SE ESTÁ RECARGANDO, SE REPLANIFICA
+			} else if( sensores.posF == destino.fila and sensores.posC == destino.columna and objetivo != RECARGA ) {
+
+				actual.fila = sensores.posF;
+				actual.columna = sensores.posC;
+				destino.fila = sensores.destinoF;
+				destino.columna = sensores.destinoC;
+				hayplan = pathFinding( sensores.nivel, actual, destino, plan );
+				objetivo = DESTINO;
+				sigAccion = actIDLE;
+				accionElegida = true;
+
+			// SI EL PLAN SE HA TERMINADO Y SE ESTÁ RECARGANDO, SE RECARGA HASTA QUE SE CONSIGA LA CANTIDAD DESEADA
+			} else if( sensores.posF == destino.fila and sensores.posC == destino.columna and objetivo == RECARGA ) {
+
+				// Si se necesita seguir recargando
+				if( !bateriaSuficientementeLlena( sensores ) ) {
+					sigAccion = actIDLE;
+					accionElegida = true;
+				// Si ya se ha recargado suficiente
+			} else {
+				destino.fila = sensores.destinoF;
+				destino.columna = sensores.destinoC;
+				hayplan = pathFinding( sensores.nivel, actual, destino, plan );
+				objetivo = DESTINO;
+				sigAccion = actIDLE;
+				accionElegida = true;
+			}
+
+			// OTRA OPCIÓN INDICARÍA UN ERROR
+			} else {
+				cout << "ERROR EN THINK" << endl;
+			}
+
+		} while( !accionElegida );
 	}
 
 	return sigAccion;
@@ -328,8 +408,8 @@ bool ComportamientoJugador::pathFinding_Costo_Uniforme( const estado & origen, c
 	nodo current;
 	current.st = origen;
 	current.coste = 0;
-	current.bikini = false;
-	current.zapatillas = false;
+	current.bikini = tengoBikini;
+	current.zapatillas = tengoZapatillas;
 	current.secuencia.empty();
 
 	cola.push( current );
@@ -497,6 +577,9 @@ int ComportamientoJugador::costeCasilla( unsigned char casilla, bool bikini, boo
 		case 'T':
 			return 2;
 			break;
+		case '?':
+			return 3;
+			break;
 		default:
 			return 1;
 			break;
@@ -506,9 +589,409 @@ int ComportamientoJugador::costeCasilla( unsigned char casilla, bool bikini, boo
 
 void ComportamientoJugador::comprobarObjetos( unsigned char casilla, bool & bikini, bool & zapatillas ) {
 
-	if( casilla == 'K' )
+	if( casilla == 'K' ) {
 		bikini = true;
-	else if( casilla = 'D' )
+	} else if( casilla = 'D' ) {
 		zapatillas = true;
+	}
+
+}
+
+bool ComportamientoJugador::EsAldeano(unsigned char casilla){
+	if (casilla=='a')
+		return true;
+	else
+	  return false;
+}
+
+void ComportamientoJugador::pintarMapa( Sensores sensores ) {
+
+	switch( sensores.sentido ) {
+		case norte:
+			mapaResultado[sensores.posF][sensores.posC] = sensores.terreno[0];
+			mapaResultado[sensores.posF - 1][sensores.posC - 1] = sensores.terreno[1];
+			mapaResultado[sensores.posF - 1][sensores.posC] = sensores.terreno[2];
+			mapaResultado[sensores.posF - 1][sensores.posC + 1] = sensores.terreno[3];
+			mapaResultado[sensores.posF - 2][sensores.posC - 2] = sensores.terreno[4];
+			mapaResultado[sensores.posF - 2][sensores.posC - 1] = sensores.terreno[5];
+			mapaResultado[sensores.posF - 2][sensores.posC] = sensores.terreno[6];
+			mapaResultado[sensores.posF - 2][sensores.posC + 1] = sensores.terreno[7];
+			mapaResultado[sensores.posF - 2][sensores.posC + 2] = sensores.terreno[8];
+			mapaResultado[sensores.posF - 3][sensores.posC - 3] = sensores.terreno[9];
+			mapaResultado[sensores.posF - 3][sensores.posC - 2] = sensores.terreno[10];
+			mapaResultado[sensores.posF - 3][sensores.posC - 1] = sensores.terreno[11];
+			mapaResultado[sensores.posF - 3][sensores.posC] = sensores.terreno[12];
+			mapaResultado[sensores.posF - 3][sensores.posC + 1] = sensores.terreno[13];
+			mapaResultado[sensores.posF - 3][sensores.posC + 2] = sensores.terreno[14];
+			mapaResultado[sensores.posF - 3][sensores.posC + 3] = sensores.terreno[15];
+			break;
+		case este:
+			mapaResultado[sensores.posF][sensores.posC] = sensores.terreno[0];
+			mapaResultado[sensores.posF - 1][sensores.posC + 1] = sensores.terreno[1];
+			mapaResultado[sensores.posF][sensores.posC + 1] = sensores.terreno[2];
+			mapaResultado[sensores.posF + 1][sensores.posC + 1] = sensores.terreno[3];
+			mapaResultado[sensores.posF - 2][sensores.posC + 2] = sensores.terreno[4];
+			mapaResultado[sensores.posF - 1][sensores.posC + 2] = sensores.terreno[5];
+			mapaResultado[sensores.posF][sensores.posC + 2] = sensores.terreno[6];
+			mapaResultado[sensores.posF + 1][sensores.posC + 2] = sensores.terreno[7];
+			mapaResultado[sensores.posF + 2][sensores.posC + 2] = sensores.terreno[8];
+			mapaResultado[sensores.posF - 3][sensores.posC + 3] = sensores.terreno[9];
+			mapaResultado[sensores.posF - 2][sensores.posC + 3] = sensores.terreno[10];
+			mapaResultado[sensores.posF - 1][sensores.posC + 3] = sensores.terreno[11];
+			mapaResultado[sensores.posF][sensores.posC + 3] = sensores.terreno[12];
+			mapaResultado[sensores.posF + 1][sensores.posC + 3] = sensores.terreno[13];
+			mapaResultado[sensores.posF + 2][sensores.posC + 3] = sensores.terreno[14];
+			mapaResultado[sensores.posF + 3][sensores.posC + 3] = sensores.terreno[15];
+			break;
+		case sur:
+			mapaResultado[sensores.posF][sensores.posC] = sensores.terreno[0];
+			mapaResultado[sensores.posF + 1][sensores.posC + 1] = sensores.terreno[1];
+			mapaResultado[sensores.posF + 1][sensores.posC] = sensores.terreno[2];
+			mapaResultado[sensores.posF + 1][sensores.posC - 1] = sensores.terreno[3];
+			mapaResultado[sensores.posF + 2][sensores.posC + 2] = sensores.terreno[4];
+			mapaResultado[sensores.posF + 2][sensores.posC + 1] = sensores.terreno[5];
+			mapaResultado[sensores.posF + 2][sensores.posC] = sensores.terreno[6];
+			mapaResultado[sensores.posF + 2][sensores.posC - 1] = sensores.terreno[7];
+			mapaResultado[sensores.posF + 2][sensores.posC - 2] = sensores.terreno[8];
+			mapaResultado[sensores.posF + 3][sensores.posC + 3] = sensores.terreno[9];
+			mapaResultado[sensores.posF + 3][sensores.posC + 2] = sensores.terreno[10];
+			mapaResultado[sensores.posF + 3][sensores.posC + 1] = sensores.terreno[11];
+			mapaResultado[sensores.posF + 3][sensores.posC] = sensores.terreno[12];
+			mapaResultado[sensores.posF + 3][sensores.posC - 1] = sensores.terreno[13];
+			mapaResultado[sensores.posF + 3][sensores.posC - 2] = sensores.terreno[14];
+			mapaResultado[sensores.posF + 3][sensores.posC - 3] = sensores.terreno[15];
+			break;
+		case oeste:
+			mapaResultado[sensores.posF][sensores.posC] = sensores.terreno[0];
+			mapaResultado[sensores.posF + 1][sensores.posC - 1] = sensores.terreno[1];
+			mapaResultado[sensores.posF][sensores.posC - 1] = sensores.terreno[2];
+			mapaResultado[sensores.posF - 1][sensores.posC - 1] = sensores.terreno[3];
+			mapaResultado[sensores.posF + 2][sensores.posC - 2] = sensores.terreno[4];
+			mapaResultado[sensores.posF + 1][sensores.posC - 2] = sensores.terreno[5];
+			mapaResultado[sensores.posF][sensores.posC - 2] = sensores.terreno[6];
+			mapaResultado[sensores.posF - 1][sensores.posC - 2] = sensores.terreno[7];
+			mapaResultado[sensores.posF - 2][sensores.posC - 2] = sensores.terreno[8];
+			mapaResultado[sensores.posF + 3][sensores.posC - 3] = sensores.terreno[9];
+			mapaResultado[sensores.posF + 2][sensores.posC - 3] = sensores.terreno[10];
+			mapaResultado[sensores.posF + 1][sensores.posC - 3] = sensores.terreno[11];
+			mapaResultado[sensores.posF][sensores.posC - 3] = sensores.terreno[12];
+			mapaResultado[sensores.posF - 1][sensores.posC - 3] = sensores.terreno[13];
+			mapaResultado[sensores.posF - 2][sensores.posC - 3] = sensores.terreno[14];
+			mapaResultado[sensores.posF - 3][sensores.posC - 3] = sensores.terreno[15];
+			break;
+	}
+
+}
+
+bool ComportamientoJugador::necesitoReplanificar( Sensores sensores ) {
+
+	switch ( actual.orientacion ) {
+		case norte:
+			return mapaResultado[sensores.posF - 1][sensores.posC] == 'P' or
+						 mapaResultado[sensores.posF - 1][sensores.posC] == 'M' or
+						 mapaResultado[sensores.posF - 1][sensores.posC] == 'A' or
+						 mapaResultado[sensores.posF - 1][sensores.posC] == 'B';
+			break;
+		case este:
+			return mapaResultado[sensores.posF][sensores.posC + 1] == 'P' or
+						 mapaResultado[sensores.posF][sensores.posC + 1] == 'M' or
+						 mapaResultado[sensores.posF][sensores.posC + 1] == 'A' or
+						 mapaResultado[sensores.posF][sensores.posC + 1] == 'B';
+			break;
+		case sur:
+			return mapaResultado[sensores.posF + 1][sensores.posC] == 'P' or
+						 mapaResultado[sensores.posF + 1][sensores.posC] == 'M' or
+						 mapaResultado[sensores.posF + 1][sensores.posC] == 'A' or
+						 mapaResultado[sensores.posF + 1][sensores.posC] == 'B';
+			break;
+		case oeste:
+			return mapaResultado[sensores.posF][sensores.posC - 1] == 'P' or
+						 mapaResultado[sensores.posF][sensores.posC - 1] == 'M' or
+						 mapaResultado[sensores.posF][sensores.posC - 1] == 'A' or
+						 mapaResultado[sensores.posF][sensores.posC - 1] == 'B';
+			break;
+	}
+}
+
+
+bool ComportamientoJugador::necesitoRecargar( Sensores sensores ) {
+
+	return sensores.bateria <= 500;
+
+}
+
+bool ComportamientoJugador::bateriaSuficientementeLlena( Sensores sensores ) {
+
+	return sensores.bateria >= 1200;
+
+}
+
+bool ComportamientoJugador::veoPuntoInteres( Sensores sensores, int & recargaFila, int & recargaColumna, unsigned char busqueda ) {
+
+	for( int i = 0; i < 16; i++ ) {
+		if( sensores.terreno[i] == busqueda ) {
+			recargaFila = sensores.posF;
+			recargaColumna = sensores.posC;
+			calcularCoordenadas( i, recargaFila, recargaColumna );
+			return true;
+
+		}
+	}
+
+	return false;
+
+}
+
+void ComportamientoJugador::calcularCoordenadas( int pos, int & fila, int & columna ) {
+
+	if( actual.orientacion == norte ) {
+		switch(pos) {
+			case 1:
+				fila--;
+				columna--;
+				break;
+			case 2:
+				fila--;
+				break;
+			case 3:
+				fila--;
+				columna++;
+				break;
+			case 4:
+				fila -= 2;
+				columna -= 2;
+				break;
+			case 5:
+				fila -= 2;
+				columna--;
+				break;
+			case 6:
+				fila -= 2;
+				break;
+			case 7:
+				fila -= 2;
+				columna++;
+				break;
+			case 8:
+				fila -= 2;
+				columna += 2;
+				break;
+			case 9:
+				fila -= 3;
+				columna -= 3;
+				break;
+			case 10:
+				fila -= 3;
+				columna -= 2;
+				break;
+			case 11:
+				fila -= 3;
+				columna--;
+				break;
+			case 12:
+				fila -= 3;
+				break;
+			case 13:
+				fila -= 3;
+				columna++;
+				break;
+			case 14:
+				fila -= 3;
+				columna += 2;
+				break;
+			case 15:
+				fila -= 3;
+				columna += 3;
+				break;
+			default:
+				break;
+		}
+	} else if( actual.orientacion == este ) {
+		switch(pos) {
+			case 1:
+				fila--;
+				columna++;
+				break;
+			case 2:
+				columna++;
+				break;
+			case 3:
+				fila++;
+				columna++;
+				break;
+			case 4:
+				fila -= 2;
+				columna += 2;
+				break;
+			case 5:
+				fila--;
+				columna += 2;
+				break;
+			case 6:
+				columna += 2;
+				break;
+			case 7:
+				fila++;
+				columna += 2;
+				break;
+			case 8:
+				fila += 2;
+				columna += 2;
+				break;
+			case 9:
+				fila -= 3;
+				columna += 3;
+				break;
+			case 10:
+				fila -= 2;
+				columna += 3;
+				break;
+			case 11:
+				fila--;
+				columna += 3;
+				break;
+			case 12:
+				columna += 3;
+				break;
+			case 13:
+				fila++;
+				columna += 3;
+				break;
+			case 14:
+				fila += 2;
+				columna += 3;
+				break;
+			case 15:
+				fila += 3;
+				columna += 3;
+				break;
+			default:
+				break;
+		}
+	} else if( actual.orientacion == sur ) {
+		switch(pos) {
+			case 1:
+				fila++;
+				columna++;
+				break;
+			case 2:
+				fila++;
+				break;
+			case 3:
+				fila++;
+				columna--;
+				break;
+			case 4:
+				fila += 2;
+				columna += 2;
+				break;
+			case 5:
+				fila += 2;
+				columna++;
+				break;
+			case 6:
+				fila += 2;
+				break;
+			case 7:
+				fila += 2;
+				columna--;
+				break;
+			case 8:
+				fila += 2;
+				columna -= 2;
+				break;
+			case 9:
+				fila += 3;
+				columna += 3;
+				break;
+			case 10:
+				fila += 3;
+				columna += 2;
+				break;
+			case 11:
+				fila += 3;
+				columna++;
+				break;
+			case 12:
+				fila += 3;
+				break;
+			case 13:
+				fila += 3;
+				columna--;
+				break;
+			case 14:
+				fila += 3;
+				columna -= 2;
+				break;
+			case 15:
+				fila += 3;
+				columna -= 3;
+				break;
+			default:
+				break;
+		}
+	} else {
+		switch(pos) {
+			case 1:
+				fila++;
+				columna--;
+				break;
+			case 2:
+				columna--;
+				break;
+			case 3:
+				fila--;
+				columna--;
+				break;
+			case 4:
+				fila += 2;
+				columna -= 2;
+				break;
+			case 5:
+				fila++;
+				columna -= 2;
+				break;
+			case 6:
+				columna -= 2;
+				break;
+			case 7:
+				fila--;
+				columna -= 2;
+				break;
+			case 8:
+				fila -= 2;
+				columna -= 2;
+				break;
+			case 9:
+				fila += 3;
+				columna -= 3;
+				break;
+			case 10:
+				fila += 2;
+				columna -= 3;
+				break;
+			case 11:
+				fila++;
+				columna -= 3;
+				break;
+			case 12:
+				columna -= 3;
+				break;
+			case 13:
+				fila--;
+				columna -= 3;
+				break;
+			case 14:
+				fila -= 2;
+				columna -= 3;
+				break;
+			case 15:
+				fila -= 3;
+				columna -= 3;
+				break;
+			default:
+				break;
+		}
+	}
 
 }

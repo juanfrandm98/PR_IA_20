@@ -11,6 +11,13 @@ struct estado {
   int orientacion;
 };
 
+enum ObjetivoFijado {
+  DESTINO,
+  RECARGA,
+  ZAPATILLAS,
+  BIKINI
+};
+
 class ComportamientoJugador : public Comportamiento {
   public:
     ComportamientoJugador(unsigned int size) : Comportamiento(size) {
@@ -21,6 +28,10 @@ class ComportamientoJugador : public Comportamiento {
       destino.columna = -1;
       destino.orientacion = -1;
       hayplan=false;
+      tengoBikini = false;
+      tengoZapatillas = false;
+      conozcoPuntoRecarga = false;
+      recargaFila = recargaColumna = -1;
     }
     ComportamientoJugador(std::vector< std::vector< unsigned char> > mapaR) : Comportamiento(mapaR) {
       // Inicializar Variables de Estado
@@ -30,6 +41,10 @@ class ComportamientoJugador : public Comportamiento {
       destino.columna = -1;
       destino.orientacion = -1;
       hayplan=false;
+      tengoBikini = false;
+      tengoZapatillas = false;
+      conozcoPuntoRecarga = false;
+      recargaFila = recargaColumna = -1;
     }
     ComportamientoJugador(const ComportamientoJugador & comport) : Comportamiento(comport){}
     ~ComportamientoJugador(){}
@@ -42,9 +57,15 @@ class ComportamientoJugador : public Comportamiento {
   private:
     // Declarar Variables de Estado
     int fil, col, brujula;
-    estado actual, destino;
+    estado actual, destino, destinoPausado;
     list<Action> plan;
     bool hayplan;
+    bool tengoBikini;
+    bool tengoZapatillas;
+    ObjetivoFijado objetivo;
+    bool conozcoPuntoRecarga;
+    int recargaFila;
+    int recargaColumna;
 
     // Métodos privados de la clase
     bool pathFinding(int level, const estado &origen, const estado &destino, list<Action> &plan);
@@ -57,6 +78,13 @@ class ComportamientoJugador : public Comportamiento {
     void calcularCoordenadasAvance( const estado st, int & fil, int & col );
     int costeCasilla( unsigned char casilla, bool bikini, bool zapatillas );
     void comprobarObjetos( unsigned char casilla, bool & bikini, bool & zapatillas );
+    bool EsAldeano( unsigned char casilla );
+    void pintarMapa( Sensores sensores );
+    bool necesitoReplanificar( Sensores sensores );
+    bool necesitoRecargar( Sensores sensores );
+    bool bateriaSuficientementeLlena( Sensores sensores );
+    bool veoPuntoInteres( Sensores sensores, int & recargaFila, int & recargaColumna, unsigned char busqueda );
+    void calcularCoordenadas( int pos, int & fila, int & columna );
 
 };
 
