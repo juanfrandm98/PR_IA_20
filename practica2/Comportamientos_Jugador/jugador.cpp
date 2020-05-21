@@ -139,6 +139,7 @@ Action ComportamientoJugador::think( Sensores sensores ) {
 		} while( !accionElegida );
 	}
 
+	accionesRestantes--;
 	return sigAccion;
 
 }
@@ -713,10 +714,63 @@ bool ComportamientoJugador::necesitoReplanificar( Sensores sensores ) {
 	}
 }
 
+bool ComportamientoJugador::valeLaPenaRecargar( Sensores sensores ) {
+
+	if( accionesRestantes - ( ( 1200 - sensores.bateria ) / 10 ) > 100 )
+		return true;
+	else
+		return false;
+
+}
+
+int ComportamientoJugador::calcularDistancia( int f_origen, int c_origen, int f_destino, int c_destino ) {
+
+	int f_dif, c_dif;
+
+	if( f_origen > f_destino )
+		f_dif = f_origen - f_destino;
+	else
+		f_dif = f_destino - f_origen;
+
+	if( c_origen > c_destino )
+		c_dif = c_origen - c_destino;
+	else
+		c_dif = c_destino - c_origen;
+
+	return f_dif + c_dif;
+
+}
+
+bool ComportamientoJugador::destinoMuchoMasCerca( Sensores sensores ) {
+
+	int casillasADestino = calcularDistancia( sensores.posF, sensores.posC, sensores.destinoF, sensores.destinoC );
+	int casillasARecarga = calcularDistancia( sensores.posF, sensores.posC, recargaFila, recargaColumna );
+
+	return casillasADestino + 5 < casillasARecarga;
+
+}
 
 bool ComportamientoJugador::necesitoRecargar( Sensores sensores ) {
 
-	return sensores.bateria <= 500;
+	if( !valeLaPenaRecargar( sensores ) ) {
+		return false;
+	} else {
+		// Se considera batería suficientemente cargada como para continuar con el
+		// desarrollo habitual
+		if( sensores.bateria > 500 ) {
+			return false;
+		// Se considera batería baja, antes que recargar se prioriza que el objetivo
+		// esté más cerca que el punto de recarga
+		} else if( sensores.bateria > 250 and sensores.bateria <= 500 ) {
+			if( destinoMuchoMasCerca( sensores ) )
+				return false;
+			else
+				return true;
+		// Se considera batería crítica
+		} else {
+			return true;
+		}
+	}
 
 }
 
